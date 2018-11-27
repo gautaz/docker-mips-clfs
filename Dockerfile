@@ -7,6 +7,16 @@ ARG CLFS_ENDIAN=big
 ARG CLFS_MIPS_LEVEL=3
 ARG CLFS_FLOAT=hard
 
+ARG BINUTILS_VERSION=2.27
+ARG BUSYBOX_VERSION=1.24.2
+ARG GCC_VERSION=6.2.0
+ARG GMP_VERSION=6.1.1
+ARG IANA_ETC_VERSION=2.30
+ARG LINUX_KERNEL_VERSION=4.9.22
+ARG MPC_VERSION=1.0.3
+ARG MPFR_VERSION=3.1.4
+ARG MUSL_VERSION=1.1.16
+
 ENV CLFS_HOME=/home/clfs
 ENV CLFS=${CLFS_HOME}/mnt
 
@@ -38,15 +48,15 @@ RUN \
     sudo chown -R clfs: "${CLFS_HOME}" && \
     sudo apk add --no-cache build-base bash bzip2 coreutils curl diffutils findutils grep gzip gawk m4 ncurses-dev sed patch sudo tar texinfo xz && \
     mkdir -p "${CLFS}/sources" && \
-    curl -L http://ftp.gnu.org/gnu/binutils/binutils-2.27.tar.bz2 | tar xjf - -C "${CLFS}/sources" && \
-    curl -L http://busybox.net/downloads/busybox-1.24.2.tar.bz2 | tar xjf - -C "${CLFS}/sources" && \
-    curl -L http://gcc.gnu.org/pub/gcc/releases/gcc-6.2.0/gcc-6.2.0.tar.bz2 | tar xjf - -C "${CLFS}/sources" && \
-    curl -L http://ftp.gnu.org/gnu/gmp/gmp-6.1.1.tar.bz2 | tar xjf - -C "${CLFS}/sources" && \
-    curl -L http://sethwklein.net/iana-etc-2.30.tar.bz2 | tar xjf - -C "${CLFS}/sources" && \
-    curl -L http://www.kernel.org/pub/linux/kernel/v4.x/linux-4.9.22.tar.xz | tar xJf - -C "${CLFS}/sources" && \
-    curl -L https://ftp.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz | tar xzf - -C "${CLFS}/sources" && \
-    curl -L http://ftp.gnu.org/gnu/mpfr/mpfr-3.1.4.tar.bz2 | tar xjf - -C "${CLFS}/sources" && \
-    curl -L http://www.musl-libc.org/releases/musl-1.1.16.tar.gz | tar xzf - -C "${CLFS}/sources" && \
-    test `curl -L http://patches.clfs.org/embedded-dev/iana-etc-2.30-update-2.patch | tee "${CLFS}/sources/iana-etc-2.30-update-2.patch" | md5sum | cut -d' ' -f1` = "8bf719b313053a482b1e878b75dfc07e" && \
+    curl -L "http://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.bz2" | tar xjf - -C "${CLFS}/sources" && \
+    curl -L "http://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2" | tar xjf - -C "${CLFS}/sources" && \
+    curl -L "http://gcc.gnu.org/pub/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.bz2" | tar xjf - -C "${CLFS}/sources" && \
+    curl -L "http://ftp.gnu.org/gnu/gmp/gmp-${GMP_VERSION}.tar.bz2" | tar xjf - -C "${CLFS}/sources" && \
+    curl -L "http://sethwklein.net/iana-etc-${IANA_ETC_VERSION}.tar.bz2" | tar xjf - -C "${CLFS}/sources" && \
+    curl -L "http://www.kernel.org/pub/linux/kernel/v4.x/linux-${LINUX_KERNEL_VERSION}.tar.xz" | tar xJf - -C "${CLFS}/sources" && \
+    curl -L "https://ftp.gnu.org/gnu/mpc/mpc-${MPC_VERSION}.tar.gz" | tar xzf - -C "${CLFS}/sources" && \
+    curl -L "http://ftp.gnu.org/gnu/mpfr/mpfr-${MPFR_VERSION}.tar.bz2" | tar xjf - -C "${CLFS}/sources" && \
+    curl -L "http://www.musl-libc.org/releases/musl-${MUSL_VERSION}.tar.gz" | tar xzf - -C "${CLFS}/sources" && \
+    test `curl -L http://patches.clfs.org/embedded-dev/iana-etc-${IANA_ETC_VERSION}-update-2.patch | tee "${CLFS}/sources/iana-etc-${IANA_ETC_VERSION}-update-2.patch" | md5sum | cut -d' ' -f1` = "8bf719b313053a482b1e878b75dfc07e" && \
     mkdir -p "${CLFS}/cross-tools/${CLFS_TARGET}" && \
     ln -sfv . "${CLFS}/cross-tools/${CLFS_TARGET}/usr"
