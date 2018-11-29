@@ -94,7 +94,7 @@ RUN \
         make install \
     )
 
-# cross gcc
+# cross gcc static
 RUN \
     ( \
         cd "${CLFS}/sources/gcc-${GCC_VERSION}" && \
@@ -133,3 +133,114 @@ RUN \
         make all-gcc all-target-libgcc && \
         make install-gcc install-target-libgcc \
     )
+
+# cross musl
+RUN \
+    ( \
+        cd "${CLFS}/sources/musl-${MUSL_VERSION}" && \
+        ./configure \
+            CROSS_COMPILE=${CLFS_TARGET}- \
+            --prefix=/ \
+            --target=${CLFS_TARGET} && \
+        make && \
+        DESTDIR=${CLFS}/cross-tools/${CLFS_TARGET} make install \
+    )
+
+# cross gcc final
+RUN \
+    rm -rf "${CLFS}/sources/gcc-build" && \
+    mkdir -p "${CLFS}/sources/gcc-build" && \
+    ( \
+        cd "${CLFS}/sources/gcc-build" && \
+        ../gcc-${GCC_VERSION}/configure \
+            --prefix=${CLFS}/cross-tools \
+            --build=${CLFS_HOST} \
+            --host=${CLFS_HOST} \
+            --target=${CLFS_TARGET} \
+            --with-sysroot=${CLFS}/cross-tools/${CLFS_TARGET} \
+            --disable-nls \
+            --enable-languages=c \
+            --enable-c99 \
+            --enable-long-long \
+            --disable-libmudflap \
+            --disable-multilib \
+            --with-mpfr-include=$(pwd)/../gcc-${GCC_VERSION}/mpfr/src \
+            --with-mpfr-lib=$(pwd)/mpfr/src/.libs \
+            --with-abi=${CLFS_ABI} \
+            --with-arch=mips${CLFS_MIPS_LEVEL} \
+            --with-float=${CLFS_FLOAT} \
+            --with-endian=${CLFS_ENDIAN} && \
+        make && \
+        make install \
+    )
+
+# toolchain environment
+ENV CC="${CLFS_TARGET}-gcc --sysroot=${CLFS}/targetfs"
+# ENV CXX="${CLFS_TARGET}-g++ --sysroot=${CLFS}/targetfs"
+ENV AR="${CLFS_TARGET}-ar"
+ENV AS="${CLFS_TARGET}-as"
+ENV LD="${CLFS_TARGET}-ld --sysroot=${CLFS}/targetfs"
+ENV RANLIB="${CLFS_TARGET}-ranlib"
+ENV READELF="${CLFS_TARGET}-readelf"
+ENV STRIP="${CLFS_TARGET}-strip"
+
+SHELL ["/bin/bash", "-c"]
+
+# target filesystem
+RUN \
+    mkdir -pv ${CLFS}/targetfs/{bin,boot,dev,etc,home,lib/{firmware,modules}} && \
+    mkdir -pv ${CLFS}/targetfs/{mnt,opt,proc,sbin,srv,sys} && \
+    mkdir -pv ${CLFS}/targetfs/var/{cache,lib,local,lock,log,opt,run,spool} && \
+    install -dv -m 0750 ${CLFS}/targetfs/root && \
+    install -dv -m 1777 ${CLFS}/targetfs/{var/,}tmp && \
+    mkdir -pv ${CLFS}/targetfs/usr/{,local/}{bin,include,lib,sbin,share,src} && \
+    ln -svf ../proc/mounts ${CLFS}/targetfs/etc/mtab
+
+ADD --chown=clfs:clfs ["targetfs/passwd", "${CLFS}/targetfs/etc/passwd"]
+ADD --chown=clfs:clfs ["targetfs/group", "${CLFS}/targetfs/etc/group"]
+
+RUN \
+    touch ${CLFS}/targetfs/var/log/lastlog && \
+    chmod -v 664 ${CLFS}/targetfs/var/log/lastlog && \
+    cp -v ${CLFS}/cross-tools/${CLFS_TARGET}/lib64/libgcc_s.so.1 ${CLFS}/targetfs/lib/ && \
+    ${CLFS_TARGET}-strip ${CLFS}/targetfs/lib/libgcc_s.so.1
+
+RUN \
+    ( \
+        cd "${CLFS}/sources/musl-${MUSL_VERSION}" && \
+        ./configure \
+            CROSS_COMPILE=${CLFS_TARGET}- \
+            --prefix=/ \
+            --disable-static \
+            --target=${CLFS_TARGET} && \
+        make && \
+        DESTDIR=${CLFS}/targetfs make install-libs \
+    )
+
+RUN \
+    ( \
+        cd "${CLFS}/sources/busybox-${BUSYBOX_VERSION}" && \
+        make distclean && \
+        make ARCH="${CLFS_ARCH}" defconfig && \
+        sed -i 's/\(CONFIG_\)\(.*\)\(INETD\)\(.*\)=y/# \1\2\3\4 is not set/g' .config && \
+        sed -i 's/\(CONFIG_IFPLUGD\)=y/# \1 is not set/' .config && \
+        sed -i 's/\(CONFIG_FEATURE_WTMP\)=y/# \1 is not set/' .config && \
+        sed -i 's/\(CONFIG_FEATURE_UTMP\)=y/# \1 is not set/' .config && \
+        sed -i 's/\(CONFIG_UDPSVD\)=y/# \1 is not set/' .config && \
+        sed -i 's/\(CONFIG_TCPSVD\)=y/# \1 is not set/' .config && \
+        make ARCH="${CLFS_ARCH}" CROSS_COMPILE="${CLFS_TARGET}-" && \
+        make ARCH="${CLFS_ARCH}" CROSS_COMPILE="${CLFS_TARGET}-"\
+            CONFIG_PREFIX="${CLFS}/targetfs" install && \
+        cp -v examples/depmod.pl ${CLFS}/cross-tools/bin && \
+        chmod -v 755 ${CLFS}/cross-tools/bin/depmod.pl \
+    )
+
+RUN \
+    ( \
+        cd "${CLFS}/sources/iana-etc-${IANA_ETC_VERSION}" && \
+        make get && \
+        make STRIP=yes && \
+        make DESTDIR=${CLFS}/targetfs install \
+    )
+
+ADD --chown=clfs:clfs ["targetfs/fstab", "${CLFS}/targetfs/etc/fstab"]
