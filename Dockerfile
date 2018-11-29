@@ -257,3 +257,5 @@ RUN \
         make ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- \
             INSTALL_MOD_PATH=${CLFS}/targetfs modules_install \
     )
+
+RUN "${CLFS_TARGET}-objcopy" -S -O srec "${CLFS}/sources/linux-${LINUX_KERNEL_VERSION}/vmlinux" "${CLFS}/targetfs/boot/vmlinux.srec"
