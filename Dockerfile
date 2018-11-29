@@ -244,3 +244,16 @@ RUN \
     )
 
 ADD --chown=clfs:clfs ["targetfs/fstab", "${CLFS}/targetfs/etc/fstab"]
+
+ARG CLFS_PLATFORM=rbtx49xx
+
+RUN \
+    sudo apk add --no-cache bc && \
+    ( \
+        cd "${CLFS}/sources/linux-${LINUX_KERNEL_VERSION}" && \
+        make mrproper && \
+        make ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- ${CLFS_PLATFORM}_defconfig && \
+        make ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- && \
+        make ARCH=${CLFS_ARCH} CROSS_COMPILE=${CLFS_TARGET}- \
+            INSTALL_MOD_PATH=${CLFS}/targetfs modules_install \
+    )
