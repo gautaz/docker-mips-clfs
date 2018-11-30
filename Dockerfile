@@ -259,3 +259,10 @@ RUN \
     )
 
 RUN "${CLFS_TARGET}-objcopy" -S -O srec "${CLFS}/sources/linux-${LINUX_KERNEL_VERSION}/vmlinux" "${CLFS}/targetfs/boot/vmlinux.srec"
+
+RUN \
+    curl -L "http://git.clfs.org/?p=bootscripts-embedded.git;a=snapshot;h=HEAD;sf=tgz" | tar xzf - -C "${CLFS}/sources" && \
+    ( \
+        cd "${CLFS}/sources/bootscripts-embedded" && \
+        make DESTDIR=${CLFS}/targetfs install-bootscripts \
+    )
