@@ -271,3 +271,4 @@ ADD --chown=clfs:clfs ["targetfs/etc/mdev.conf", "${CLFS}/targetfs/etc/mdev.conf
 ADD --chown=clfs:clfs ["targetfs/etc/profile", "${CLFS}/targetfs/etc/profile"]
 ADD --chown=clfs:clfs ["targetfs/etc/inittab", "${CLFS}/targetfs/etc/inittab"]
 ADD --chown=clfs:clfs ["targetfs/etc/HOSTNAME", "${CLFS}/targetfs/etc/HOSTNAME"]
+ADD --chown=clfs:clfs ["targetfs/etc/hosts", "${CLFS}/targetfs/etc/hosts"]
