@@ -267,7 +267,7 @@ RUN \
         make DESTDIR=${CLFS}/targetfs install-bootscripts \
     )
 
-ADD --chown=clfs:clfs ["targetfs/mdev.conf", "${CLFS}/targetfs/etc/mdev.conf"]
-ADD --chown=clfs:clfs ["targetfs/profile", "${CLFS}/targetfs/etc/profile"]
-ADD --chown=clfs:clfs ["targetfs/inittab", "${CLFS}/targetfs/etc/inittab"]
-ADD --chown=clfs:clfs ["targetfs/HOSTNAME", "${CLFS}/targetfs/etc/HOSTNAME"]
+ADD --chown=clfs:clfs ["targetfs/etc/mdev.conf", "${CLFS}/targetfs/etc/mdev.conf"]
+ADD --chown=clfs:clfs ["targetfs/etc/profile", "${CLFS}/targetfs/etc/profile"]
+ADD --chown=clfs:clfs ["targetfs/etc/inittab", "${CLFS}/targetfs/etc/inittab"]
+ADD --chown=clfs:clfs ["targetfs/etc/HOSTNAME", "${CLFS}/targetfs/etc/HOSTNAME"]
